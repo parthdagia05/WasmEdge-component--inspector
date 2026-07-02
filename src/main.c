@@ -2,18 +2,16 @@
 
 #include <wasmedge/wasmedge.h>
 
-int main(void) {
-    printf("wasm-component-inspector (WasmEdge %s)\n",
-           WasmEdge_VersionGet());
+#include "inspector.h"
 
-    WasmEdge_ConfigureContext *conf = WasmEdge_ConfigureCreate();
-    if (conf == NULL) {
-        fprintf(stderr, "error: failed to create WasmEdge configuration\n");
-        return 1;
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        fprintf(stderr, "usage: %s <module.wasm>\n", argv[0]);
+        return 2;
     }
 
-    printf("configure context created OK\n");
+    printf("wasm-component-inspector (WasmEdge %s)\n", WasmEdge_VersionGet());
+    printf("inspecting: %s\n\n", argv[1]);
 
-    WasmEdge_ConfigureDelete(conf);
-    return 0;
+    return inspect_file(argv[1]);
 }

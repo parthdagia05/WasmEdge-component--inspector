@@ -1,10 +1,13 @@
+# where wasmedge lives
 WASMEDGE_DIR = $(HOME)/.wasmedge
 
 CC      = cc
+# tells the compiler where to find wasmedge/wasmedge.h
 CFLAGS  = -Wall -Wextra -g -I$(WASMEDGE_DIR)/include
+# tells linker where libwasmedge.so is and to link it
 LDFLAGS = -L$(WASMEDGE_DIR)/lib -lwasmedge -Wl,-rpath,$(WASMEDGE_DIR)/lib
 
-SRCS = src/main.c
+SRCS = src/main.c src/pipeline.c
 OBJS = $(SRCS:.c=.o)
 BIN  = wasm-inspector
 
