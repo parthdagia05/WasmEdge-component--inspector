@@ -13,12 +13,14 @@ int inspect_file(const char *path) {
     int rc = 1;
     WasmEdge_ConfigureContext *conf = NULL;
     WasmEdge_LoaderContext *loader = NULL;
+    WasmEdge_ValidatorContext *validator = NULL;
     WasmEdge_ASTModuleContext *ast = NULL;
 
     conf = WasmEdge_ConfigureCreate();
     loader = WasmEdge_LoaderCreate(conf);
-    if (loader == NULL) {
-        fprintf(stderr, "error: failed to create loader\n");
+    validator = WasmEdge_ValidatorCreate(conf);
+    if (loader == NULL || validator == NULL) {
+        fprintf(stderr, "error: failed to create loader/validator\n");
         goto cleanup;
     }
 
@@ -32,10 +34,22 @@ int inspect_file(const char *path) {
     }
     printf("[loader]    OK — binary format is well-formed\n");
 
+    /* Stage 2: VALIDATOR — check the AST against WebAssembly's type
+     * rules: every instruction's stack effect, index bounds (types,
+     * funcs, tables, memories, globals), import/export sanity.
+     * A module can parse fine and still die here. */
+    res = WasmEdge_ValidatorValidate(validator, ast);
+    if (!WasmEdge_ResultOK(res)) {
+        report_failure("validator", res);
+        goto cleanup;
+    }
+    printf("[validator] OK — module obeys the type rules\n");
+
     rc = 0;
 
 cleanup:
     if (ast != NULL) WasmEdge_ASTModuleDelete(ast);
+    if (validator != NULL) WasmEdge_ValidatorDelete(validator);
     if (loader != NULL) WasmEdge_LoaderDelete(loader);
     if (conf != NULL) WasmEdge_ConfigureDelete(conf);
     return rc;
