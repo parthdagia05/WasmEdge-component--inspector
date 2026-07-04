@@ -14,13 +14,19 @@ int inspect_file(const char *path) {
     WasmEdge_ConfigureContext *conf = NULL;
     WasmEdge_LoaderContext *loader = NULL;
     WasmEdge_ValidatorContext *validator = NULL;
+    WasmEdge_ExecutorContext *executor = NULL;
+    WasmEdge_StoreContext *store = NULL;
     WasmEdge_ASTModuleContext *ast = NULL;
+    WasmEdge_ModuleInstanceContext *instance = NULL;
 
     conf = WasmEdge_ConfigureCreate();
     loader = WasmEdge_LoaderCreate(conf);
     validator = WasmEdge_ValidatorCreate(conf);
-    if (loader == NULL || validator == NULL) {
-        fprintf(stderr, "error: failed to create loader/validator\n");
+    executor = WasmEdge_ExecutorCreate(conf, NULL);
+    store = WasmEdge_StoreCreate();
+    if (loader == NULL || validator == NULL || executor == NULL ||
+        store == NULL) {
+        fprintf(stderr, "error: failed to create pipeline contexts\n");
         goto cleanup;
     }
 
@@ -45,9 +51,24 @@ int inspect_file(const char *path) {
     }
     printf("[validator] OK — module obeys the type rules\n");
 
+    /* Stage 3: EXECUTOR — instantiate the validated module inside the
+     * store: allocate its memories/tables/globals, resolve every
+     * import against what the store already holds, run the start
+     * function. A perfectly valid module still fails here if its
+     * imports are unsatisfied. */
+    res = WasmEdge_ExecutorInstantiate(executor, &instance, store, ast);
+    if (!WasmEdge_ResultOK(res)) {
+        report_failure("executor", res);
+        goto cleanup;
+    }
+    printf("[executor]  OK — module instantiated (imports resolved)\n");
+
     rc = 0;
 
 cleanup:
+    if (instance != NULL) WasmEdge_ModuleInstanceDelete(instance);
+    if (store != NULL) WasmEdge_StoreDelete(store);
+    if (executor != NULL) WasmEdge_ExecutorDelete(executor);
     if (ast != NULL) WasmEdge_ASTModuleDelete(ast);
     if (validator != NULL) WasmEdge_ValidatorDelete(validator);
     if (loader != NULL) WasmEdge_LoaderDelete(loader);
