@@ -7,7 +7,7 @@ CFLAGS  = -Wall -Wextra -g -I$(WASMEDGE_DIR)/include
 # tells linker where libwasmedge.so is and to link it
 LDFLAGS = -L$(WASMEDGE_DIR)/lib -lwasmedge -Wl,-rpath,$(WASMEDGE_DIR)/lib
 
-SRCS = src/main.c src/pipeline.c
+SRCS = src/main.c src/pipeline.c src/print_types.c src/print_imports_exports.c
 OBJS = $(SRCS:.c=.o)
 BIN  = wasm-inspector
 

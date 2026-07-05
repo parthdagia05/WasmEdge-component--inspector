@@ -3,6 +3,7 @@
 #include <wasmedge/wasmedge.h>
 
 #include "inspector.h"
+#include "print.h"
 
 static void report_failure(const char *stage, WasmEdge_Result res) {
     fprintf(stderr, "FAILED at %s stage: %s (code 0x%03x)\n",
@@ -39,6 +40,12 @@ int inspect_file(const char *path) {
         goto cleanup;
     }
     printf("[loader]    OK — binary format is well-formed\n");
+
+    /* The AST can be inspected as soon as the loader accepts it —
+     * before validation. This shows what the binary *claims* to
+     * contain, even for modules the validator will reject. */
+    print_exports(ast);
+    printf("\n");
 
     /* Stage 2: VALIDATOR — check the AST against WebAssembly's type
      * rules: every instruction's stack effect, index bounds (types,
