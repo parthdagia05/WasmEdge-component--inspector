@@ -6,6 +6,9 @@
 #include "print.h"
 
 static void report_failure(const char *stage, WasmEdge_Result res) {
+    /* stdout is block-buffered when piped, stderr is not; flush so the
+     * failure line can never appear before the stages that preceded it. */
+    fflush(stdout);
     fprintf(stderr, "FAILED at %s stage: %s (code 0x%03x)\n",
             stage, WasmEdge_ResultGetMessage(res), WasmEdge_ResultGetCode(res));
 }
@@ -44,6 +47,7 @@ int inspect_file(const char *path) {
     /* The AST can be inspected as soon as the loader accepts it —
      * before validation. This shows what the binary *claims* to
      * contain, even for modules the validator will reject. */
+    print_imports(ast);
     print_exports(ast);
     printf("\n");
 

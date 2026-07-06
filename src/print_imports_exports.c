@@ -14,6 +14,77 @@ static const char *extern_kind_name(enum WasmEdge_ExternalType kind) {
     }
 }
 
+/* Memory limits are in 64KiB pages; table limits are entry counts. */
+static void print_limits(WasmEdge_Limit lim) {
+    if (lim.HasMax) {
+        printf("{min %u, max %u%s}", lim.Min, lim.Max,
+               lim.Shared ? ", shared" : "");
+    } else {
+        printf("{min %u}", lim.Min);
+    }
+}
+
+void print_imports(const WasmEdge_ASTModuleContext *ast) {
+    const WasmEdge_ImportTypeContext *imports[MAX_ENTRIES];
+
+    uint32_t total = WasmEdge_ASTModuleListImportsLength(ast);
+    uint32_t got = WasmEdge_ASTModuleListImports(ast, imports, MAX_ENTRIES);
+
+    printf("\nimports (%u):\n", total);
+    for (uint32_t i = 0; i < got; i++) {
+        const WasmEdge_ImportTypeContext *imp = imports[i];
+        enum WasmEdge_ExternalType kind =
+            WasmEdge_ImportTypeGetExternalType(imp);
+        /* Imports have a two-part name: "module.field". The module
+         * half is the namespace the host must register (e.g. "env",
+         * "wasi_snapshot_preview1"). */
+        WasmEdge_String mod = WasmEdge_ImportTypeGetModuleName(imp);
+        WasmEdge_String name = WasmEdge_ImportTypeGetExternalName(imp);
+
+        printf("  [%u] %-6s \"%.*s\".\"%.*s\"", i, extern_kind_name(kind),
+               (int)mod.Length, mod.Buf, (int)name.Length, name.Buf);
+
+        switch (kind) {
+        case WasmEdge_ExternalType_Function: {
+            const WasmEdge_FunctionTypeContext *ft =
+                WasmEdge_ImportTypeGetFunctionType(ast, imp);
+            printf(" : ");
+            print_function_type(ft);
+            break;
+        }
+        case WasmEdge_ExternalType_Memory: {
+            const WasmEdge_MemoryTypeContext *mt =
+                WasmEdge_ImportTypeGetMemoryType(ast, imp);
+            printf(" : pages ");
+            print_limits(WasmEdge_MemoryTypeGetLimit(mt));
+            break;
+        }
+        case WasmEdge_ExternalType_Table: {
+            const WasmEdge_TableTypeContext *tt =
+                WasmEdge_ImportTypeGetTableType(ast, imp);
+            printf(" : %s ", val_type_name(WasmEdge_TableTypeGetRefType(tt)));
+            print_limits(WasmEdge_TableTypeGetLimit(tt));
+            break;
+        }
+        case WasmEdge_ExternalType_Global: {
+            const WasmEdge_GlobalTypeContext *gt =
+                WasmEdge_ImportTypeGetGlobalType(ast, imp);
+            printf(" : %s %s",
+                   WasmEdge_GlobalTypeGetMutability(gt) ==
+                           WasmEdge_Mutability_Var
+                       ? "mut"
+                       : "const",
+                   val_type_name(WasmEdge_GlobalTypeGetValType(gt)));
+            break;
+        }
+        default:
+            break;
+        }
+        printf("\n");
+    }
+    if (total > got) printf("  ... %u more not shown\n", total - got);
+}
+
 void print_exports(const WasmEdge_ASTModuleContext *ast) {
     const WasmEdge_ExportTypeContext *exports[MAX_ENTRIES];
 
