@@ -28,10 +28,13 @@ void print_imports(const WasmEdge_ASTModuleContext *ast) {
     const WasmEdge_ImportTypeContext *imports[MAX_ENTRIES];
 
     uint32_t total = WasmEdge_ASTModuleListImportsLength(ast);
-    uint32_t got = WasmEdge_ASTModuleListImports(ast, imports, MAX_ENTRIES);
+    /* The List call returns the full list length, not how many entries
+     * it wrote into the buffer, so clamp before iterating. */
+    uint32_t shown = total < MAX_ENTRIES ? total : MAX_ENTRIES;
+    WasmEdge_ASTModuleListImports(ast, imports, MAX_ENTRIES);
 
     printf("\nimports (%u):\n", total);
-    for (uint32_t i = 0; i < got; i++) {
+    for (uint32_t i = 0; i < shown; i++) {
         const WasmEdge_ImportTypeContext *imp = imports[i];
         enum WasmEdge_ExternalType kind =
             WasmEdge_ImportTypeGetExternalType(imp);
@@ -82,17 +85,20 @@ void print_imports(const WasmEdge_ASTModuleContext *ast) {
         }
         printf("\n");
     }
-    if (total > got) printf("  ... %u more not shown\n", total - got);
+    if (total > shown) printf("  ... %u more not shown\n", total - shown);
 }
 
 void print_exports(const WasmEdge_ASTModuleContext *ast) {
     const WasmEdge_ExportTypeContext *exports[MAX_ENTRIES];
 
     uint32_t total = WasmEdge_ASTModuleListExportsLength(ast);
-    uint32_t got = WasmEdge_ASTModuleListExports(ast, exports, MAX_ENTRIES);
+    /* The List call returns the full list length, not how many entries
+     * it wrote into the buffer, so clamp before iterating. */
+    uint32_t shown = total < MAX_ENTRIES ? total : MAX_ENTRIES;
+    WasmEdge_ASTModuleListExports(ast, exports, MAX_ENTRIES);
 
     printf("\nexports (%u):\n", total);
-    for (uint32_t i = 0; i < got; i++) {
+    for (uint32_t i = 0; i < shown; i++) {
         enum WasmEdge_ExternalType kind =
             WasmEdge_ExportTypeGetExternalType(exports[i]);
         /* WasmEdge_String is NOT NUL-terminated: print via %.*s.
@@ -110,5 +116,5 @@ void print_exports(const WasmEdge_ASTModuleContext *ast) {
         }
         printf("\n");
     }
-    if (total > got) printf("  ... %u more not shown\n", total - got);
+    if (total > shown) printf("  ... %u more not shown\n", total - shown);
 }

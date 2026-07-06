@@ -32,10 +32,14 @@ void print_function_type(const WasmEdge_FunctionTypeContext *ft) {
 
     uint32_t nparams = WasmEdge_FunctionTypeGetParametersLength(ft);
     uint32_t nresults = WasmEdge_FunctionTypeGetReturnsLength(ft);
-    uint32_t got_p = WasmEdge_FunctionTypeGetParameters(ft, params, MAX_TYPES);
-    uint32_t got_r = WasmEdge_FunctionTypeGetReturns(ft, results, MAX_TYPES);
+    /* The Get calls return the full list length, not how many entries
+     * they wrote into the buffer, so clamp before printing. */
+    uint32_t shown_p = nparams < MAX_TYPES ? nparams : MAX_TYPES;
+    uint32_t shown_r = nresults < MAX_TYPES ? nresults : MAX_TYPES;
+    WasmEdge_FunctionTypeGetParameters(ft, params, MAX_TYPES);
+    WasmEdge_FunctionTypeGetReturns(ft, results, MAX_TYPES);
 
-    print_type_list(params, got_p, nparams);
+    print_type_list(params, shown_p, nparams);
     printf(" -> ");
-    print_type_list(results, got_r, nresults);
+    print_type_list(results, shown_r, nresults);
 }

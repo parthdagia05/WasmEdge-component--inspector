@@ -15,7 +15,6 @@ static void report_failure(const char *stage, WasmEdge_Result res) {
 
 int inspect_file(const char *path) {
     int rc = 1;
-    WasmEdge_ConfigureContext *conf = NULL;
     WasmEdge_LoaderContext *loader = NULL;
     WasmEdge_ValidatorContext *validator = NULL;
     WasmEdge_ExecutorContext *executor = NULL;
@@ -23,10 +22,9 @@ int inspect_file(const char *path) {
     WasmEdge_ASTModuleContext *ast = NULL;
     WasmEdge_ModuleInstanceContext *instance = NULL;
 
-    conf = WasmEdge_ConfigureCreate();
-    loader = WasmEdge_LoaderCreate(conf);
-    validator = WasmEdge_ValidatorCreate(conf);
-    executor = WasmEdge_ExecutorCreate(conf, NULL);
+    loader = WasmEdge_LoaderCreate(NULL); /* NULL = default configuration */
+    validator = WasmEdge_ValidatorCreate(NULL);
+    executor = WasmEdge_ExecutorCreate(NULL, NULL);
     store = WasmEdge_StoreCreate();
     if (loader == NULL || validator == NULL || executor == NULL ||
         store == NULL) {
@@ -83,6 +81,5 @@ cleanup:
     if (ast != NULL) WasmEdge_ASTModuleDelete(ast);
     if (validator != NULL) WasmEdge_ValidatorDelete(validator);
     if (loader != NULL) WasmEdge_LoaderDelete(loader);
-    if (conf != NULL) WasmEdge_ConfigureDelete(conf);
     return rc;
 }
