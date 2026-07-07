@@ -14,7 +14,7 @@ static const char *extern_kind_name(enum WasmEdge_ExternalType kind) {
     }
 }
 
-/* Memory limits are in 64KiB pages; table limits are entry counts. */
+// memory limits are in 64KiB pages, table limits are entry counts
 static void print_limits(WasmEdge_Limit lim) {
     if (lim.HasMax) {
         printf("{min %u, max %u%s}", lim.Min, lim.Max,
@@ -28,8 +28,8 @@ void print_imports(const WasmEdge_ASTModuleContext *ast) {
     const WasmEdge_ImportTypeContext *imports[MAX_ENTRIES];
 
     uint32_t total = WasmEdge_ASTModuleListImportsLength(ast);
-    /* The List call returns the full list length, not how many entries
-     * it wrote into the buffer, so clamp before iterating. */
+    // the List call returns the full length, not how many entries it
+    // wrote into the buffer, so clamp before iterating
     uint32_t shown = total < MAX_ENTRIES ? total : MAX_ENTRIES;
     WasmEdge_ASTModuleListImports(ast, imports, MAX_ENTRIES);
 
@@ -38,15 +38,16 @@ void print_imports(const WasmEdge_ASTModuleContext *ast) {
         const WasmEdge_ImportTypeContext *imp = imports[i];
         enum WasmEdge_ExternalType kind =
             WasmEdge_ImportTypeGetExternalType(imp);
-        /* Imports have a two-part name: "module.field". The module
-         * half is the namespace the host must register (e.g. "env",
-         * "wasi_snapshot_preview1"). */
+        // imports are named "module.field", the module half is the
+        // namespace the host must register (e.g. "env")
         WasmEdge_String mod = WasmEdge_ImportTypeGetModuleName(imp);
         WasmEdge_String name = WasmEdge_ImportTypeGetExternalName(imp);
 
+        // WasmEdge_String is not NUL-terminated, hence %.*s
         printf("  [%u] %-6s \"%.*s\".\"%.*s\"", i, extern_kind_name(kind),
                (int)mod.Length, mod.Buf, (int)name.Length, name.Buf);
 
+        // each import kind carries its own type detail
         switch (kind) {
         case WasmEdge_ExternalType_Function: {
             const WasmEdge_FunctionTypeContext *ft =
@@ -92,8 +93,7 @@ void print_exports(const WasmEdge_ASTModuleContext *ast) {
     const WasmEdge_ExportTypeContext *exports[MAX_ENTRIES];
 
     uint32_t total = WasmEdge_ASTModuleListExportsLength(ast);
-    /* The List call returns the full list length, not how many entries
-     * it wrote into the buffer, so clamp before iterating. */
+    // same clamp as print_imports, the List call returns the full length
     uint32_t shown = total < MAX_ENTRIES ? total : MAX_ENTRIES;
     WasmEdge_ASTModuleListExports(ast, exports, MAX_ENTRIES);
 
@@ -101,13 +101,13 @@ void print_exports(const WasmEdge_ASTModuleContext *ast) {
     for (uint32_t i = 0; i < shown; i++) {
         enum WasmEdge_ExternalType kind =
             WasmEdge_ExportTypeGetExternalType(exports[i]);
-        /* WasmEdge_String is NOT NUL-terminated: print via %.*s.
-         * The name is a view into the AST, nothing to free. */
+        // the name is a borrowed view into the AST, nothing to free
         WasmEdge_String name = WasmEdge_ExportTypeGetExternalName(exports[i]);
 
         printf("  [%u] %-6s \"%.*s\"", i, extern_kind_name(kind),
                (int)name.Length, name.Buf);
 
+        // only functions get a signature, other kinds just show their name
         if (kind == WasmEdge_ExternalType_Function) {
             const WasmEdge_FunctionTypeContext *ft =
                 WasmEdge_ExportTypeGetFunctionType(ast, exports[i]);

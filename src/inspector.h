@@ -1,10 +1,10 @@
 #ifndef INSPECTOR_H
 #define INSPECTOR_H
 
-/* Runs the WasmEdge pipeline (loader -> validator -> executor) on the
- * .wasm file at `path`, printing a report of what each stage finds.
- *
- * Returns 0 if every stage succeeds, 1 if any stage rejects the file. */
+// Public interface, deliberately free of WasmEdge types.
+
+// Runs loader -> validator -> executor on the .wasm file at `path`
+// and prints a report. Returns 0 if every stage passes, 1 otherwise.
 int inspect_file(const char *path);
 
 #endif

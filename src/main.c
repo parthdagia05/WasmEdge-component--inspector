@@ -10,8 +10,7 @@ int main(int argc, char *argv[]) {
         return 2;
     }
 
-    /* Silence WasmEdge's internal logger; our per-stage report via
-     * WasmEdge_Result carries the same information, cleanly. */
+    // silence WasmEdge's internal logger, our per-stage report says the same
     WasmEdge_LogOff();
 
     printf("wasm-component-inspector (WasmEdge %s)\n", WasmEdge_VersionGet());
