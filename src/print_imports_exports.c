@@ -96,7 +96,7 @@ void print_exports(const WasmEdge_ASTModuleContext *ast) {
         enum WasmEdge_ExternalType kind =
             WasmEdge_ExportTypeGetExternalType(exports[i]);
         /* WasmEdge_String is NOT NUL-terminated: print via %.*s.
-         * The name is a view into the AST — nothing to free. */
+         * The name is a view into the AST, nothing to free. */
         WasmEdge_String name = WasmEdge_ExportTypeGetExternalName(exports[i]);
 
         printf("  [%u] %-6s \"%.*s\"", i, extern_kind_name(kind),

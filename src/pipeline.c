@@ -34,7 +34,7 @@ int inspect_file(const char *path) {
         goto cleanup;
     }
 
-    /* Stage 1: LOADER — parse the raw bytes into an AST module.
+    /* Stage 1: LOADER: parse the raw bytes into an AST module.
      * This only checks the *binary format*: magic number, section
      * layout, LEB128 encodings. No type rules yet. */
     WasmEdge_Result res = WasmEdge_LoaderParseFromFile(loader, &ast, path);
@@ -42,16 +42,16 @@ int inspect_file(const char *path) {
         report_failure("loader", res);
         goto cleanup;
     }
-    printf("[loader]    OK — binary format is well-formed\n");
+    printf("[loader]    OK, binary format is well-formed\n");
 
-    /* The AST can be inspected as soon as the loader accepts it —
+    /* The AST can be inspected as soon as the loader accepts it,
      * before validation. This shows what the binary *claims* to
      * contain, even for modules the validator will reject. */
     print_imports(ast);
     print_exports(ast);
     printf("\n");
 
-    /* Stage 2: VALIDATOR — check the AST against WebAssembly's type
+    /* Stage 2: VALIDATOR: check the AST against WebAssembly's type
      * rules: every instruction's stack effect, index bounds (types,
      * funcs, tables, memories, globals), import/export sanity.
      * A module can parse fine and still die here. */
@@ -60,9 +60,9 @@ int inspect_file(const char *path) {
         report_failure("validator", res);
         goto cleanup;
     }
-    printf("[validator] OK — module obeys the type rules\n");
+    printf("[validator] OK, module obeys the type rules\n");
 
-    /* Stage 3: EXECUTOR — instantiate the validated module inside the
+    /* Stage 3: EXECUTOR: instantiate the validated module inside the
      * store: allocate its memories/tables/globals, resolve every
      * import against what the store already holds, run the start
      * function. A perfectly valid module still fails here if its
@@ -72,7 +72,7 @@ int inspect_file(const char *path) {
         report_failure("executor", res);
         goto cleanup;
     }
-    printf("[executor]  OK — module instantiated (imports resolved)\n");
+    printf("[executor]  OK, module instantiated (imports resolved)\n");
 
     rc = 0;
 
